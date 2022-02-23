@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Персональный навигатор</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=c81128eb-1648-41ef-8c5f-ea05996743f7&lang=ru_RU" type="text/javascript">
+    </script>
+    <script type="text/javascript">
+
+        var myMap;
+        var myRoute;
+
+        ymaps.ready(init);
+        function init(){
+             myMap = new ymaps.Map("map", {
+                //center: [53.2, 50.1],       // samara
+                center: [55.76, 37.64],   // msk
+                zoom: 12,
+                controls:['zoomControl', 'typeSelector']
+
+            });
+        }
+
+        function makeRoute(){
+            pointFrom = document.getElementById('pointFrom').value;
+            pointTo = document.getElementById('pointTo').value;
+            mode = document.getElementById('routingMode').value
+            if (pointFrom == ''){
+                document.getElementById('pointFrom').focus();
+                alert("Вы забыли указать начало маршрута");
+                return;
+            }else if (pointTo == ''){
+                document.getElementById('pointTo').focus();
+                alert("Вы забыли указать конец маршрута");
+                return;
+            }
+
+            myRoute = new ymaps.multiRouter.MultiRoute({
+                // Точки маршрута. Точки могут быть заданы как координатами, так и адресом.
+                referencePoints: [pointFrom, pointTo],
+                params: {
+                    avoidTrafficJams: true,
+                    routingMode: mode
+                }
+            }, {
+                // Автоматически устанавливать границы карты так,
+                // чтобы маршрут был виден целиком.
+                boundsAutoApply: true,
+                // Внешний вид линии активного маршрута
+                routeActiveStrokeWidth: 10,
+                routeActiveStrokeStyle: 'solid',
+                routeActiveStrokeColor: '#00FF7F'
+            });
+
+            // Добавление маршрута на карту.
+            myMap.geoObjects.add(myRoute);
+            myRoute.model.events.add('requestsuccess', function(){
+                var activeRoute = myRoute.getActiveRoute();
+                activeRoute.balloon.open();
+                activeRoute.properties.get('distance').text;
+                activeRoute.properties.get('duration').text;
+            })
+        }
+
+        function clearMap(){
+            myMap.geoObjects.removeAll();
+            myRoute && myMap.geoObjects.remove(myRoute);
+        }
+    </script>
+    <style>
+        html {
+            height: 100%;
+        }
+
+        body{
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #block{
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            text-align: center;
+        }
+
+        #pointFrom, #pointTo{
+            padding: 2px;
+            height: 2vh;
+            width: 30%;
+            background: rgb(224, 240, 216);
+            border: solid 1px black;
+        }
+
+        #routingMode{
+            padding: 2px;
+            width: 17%;
+            background: rgb(224, 240, 216);
+            border: solid 1px black;
+        }
+
+        .btn{
+            height: 3vh;
+            border-radius: 4px;
+            width: 10%;
+            background-color: rgb(230, 228, 120);
+        }
+
+        .btn:hover{
+            background-color: #b4dcc0;
+            font-style: italic;
+            box-shadow: 0 10px 20px rgb(204, 197, 132);
+        }
+
+        .btn:active{
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px rgba(204, 221, 142, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="block">
+        <input type="button" class="btn" onclick="makeRoute()" value="Построить маршрут">
+        <input type="text" id="pointFrom" placeholder="Откуда" required>
+        <input type="text" id="pointTo" placeholder="Куда" required>
+        <select id="routingMode">
+            <option value="auto">Автомобиль</option>
+            <option value="masstransit">Общественный транспорт</option>
+            <option value="pedestrian">Пеший маршрут</option>
+            <option value="bicycle">Велосипед</option>
+        </select>
+        <input type="button" class="btn" onclick="clearMap()" value="Очистить карту">
+    </div>
+
+    <div id="map" style="width: 100%; height: 97vh"></div>
+
+</body>
+
+</html>
